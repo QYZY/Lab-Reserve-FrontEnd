@@ -1,0 +1,37 @@
+/* src/assets/styles.css */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box; /* 使元素的宽度和高度包括内边距和边框 */
+  }
+  
+  body {
+    font-family: 'Arial', sans-serif; /* 设置全局字体 */
+    background-color: #f8f9fa; /* 设置全局背景颜色 */
+    color: #333; /* 设置全局字体颜色 */
+    line-height: 1.6; /* 设置行高 */
+  }
+  
+  a {
+    text-decoration: none; /* 去掉链接下划线 */
+    color: #007bff; /* 设置链接颜色 */
+  }
+  
+  a:hover {
+    text-decoration: underline; /* 悬停时添加下划线 */
+  }
+  
+  .container {
+    max-width: 1200px; /* 设置最大宽度 */
+    margin: 0 auto; /* 居中对齐 */
+    padding: 20px; /* 添加内边距 */
+  }
+  
+  button {
+    cursor: pointer; /* 鼠标悬停时显示手型光标 */
+  }
+  
+  img {
+    max-width: 100%; /* 使图片自适应容器宽度 */
+    height: auto; /* 保持图片比例 */
+  }
