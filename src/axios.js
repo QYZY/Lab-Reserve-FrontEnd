@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 const instance = axios.create({
-  baseURL: 'http://219.217.199.161:8080/api', // 设置基础 URL
+  baseURL: 'http://219.217.199.213:8080/api', // 设置基础 URL
 });
 
 // 添加请求拦截器

@@ -3,6 +3,8 @@ import { createPinia } from "pinia";
 
 import ElementPlus from "element-plus";
 import "element-plus/dist/index.full.js";
+
+import 'element-plus/dist/index.css'
 import "@/assets/style.css"
 import * as ElemnetPlusIconsVue from "@element-plus/icons-vue";
 
