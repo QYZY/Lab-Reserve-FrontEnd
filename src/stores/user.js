@@ -9,16 +9,18 @@ export const useUserStore = defineStore("user", {
     },
   }),
   actions: {
-    setUserRole(role) {
-      this.user.role = role; // 设置角色
+    setUserInfo(user) {
+      this.user = user; // 完全替换用户信息
+      localStorage.setItem('user', JSON.stringify(this.user)); // 同步存储到 localStorage
     },
-    setUserInfo(userInfo) {
-      this.user = { ...this.user, ...userInfo }; // 更新用户信息
+    logout() {
+      this.user = { id: null, name: '', role: '' }; // 清空用户信息
+      localStorage.removeItem('user'); // 移除存储信息
     },
   },
   getters: {
-    isTeacher: (state) => state.user.role === "teacher",
-    isLabAdmin: (state) => state.user.role === "lab-admin",
-    isSuperAdmin: (state) => state.user.role === "super-admin",
+    isTeacher: (state) => state.user.role === "TEACHER",
+    isLabAdmin: (state) => state.user.role === "LAB_ADMIN",
+    isSuperAdmin: (state) => state.user.role === "SUPER_ADMIN",
   },
 });

@@ -1,6 +1,5 @@
 import { createRouter, createWebHashHistory } from "vue-router";
 import Login from "@/views/Login.vue";
-import Main from "@/views/Main.vue";
 import Course from "@/views/Course.vue";
 import Lab from "@/views/Lab.vue";
 import User from "@/views/User.vue";
@@ -22,7 +21,7 @@ const routes = [
         component: Course,
         meta: {
           requiresAuth: true,
-          roles: ["teacher"],
+          roles: ["TEACHER"],
           title: "课程管理",
           icon: "Notebook",
           hidden: false,
@@ -35,7 +34,7 @@ const routes = [
         component: Lab,
         meta: {
           requiresAuth: true,
-          roles: ["lab-admin", "super-admin"],
+          roles: ["LAB_ADMIN", "SUPER_ADMIN"],
           title: "实验室管理",
           icon: "OfficeBuilding",
           hidden: false,
@@ -48,7 +47,7 @@ const routes = [
         component: User,
         meta: {
           requiresAuth: true,
-          roles: ["super-admin"],
+          roles: ["SUPER_ADMIN"],
           title: "用户管理",
           icon: "UserFilled",
           hidden: false,
@@ -61,7 +60,7 @@ const routes = [
         component: Reserve,
         meta: {
           requiresAuth: true,
-          roles: ["teacher"],
+          roles: ["TEACHER"],
           title: "预约管理",
           icon: "Calendar",
           hidden: false,
@@ -74,7 +73,7 @@ const routes = [
         component: Review,
         meta: {
           requiresAuth: true,
-          roles: ["lab-admin", "super-admin"],
+          roles: ["LAB_ADMIN", "SUPER_ADMIN"],
           title: "审核管理",
           icon: "Check",
           hidden: false,

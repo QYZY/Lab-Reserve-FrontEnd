@@ -34,6 +34,8 @@ const sidebarStore = useSidebarStore(); // 创建侧边栏状态管理实例
 const filteredRoutes = computed(() => {
   return routes[0].children.filter((route) => {
     const roles = route.meta.roles;
+    console.log(roles);
+    console.log(userStore.user.role);
     return !roles || roles.includes(userStore.user.role);
   });
 });

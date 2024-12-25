@@ -11,11 +11,16 @@ import * as ElemnetPlusIconsVue from "@element-plus/icons-vue";
 import App from "./App.vue";
 import router from "./router";
 
+
 const app = createApp(App);
 for (const [key, component] of Object.entries(ElemnetPlusIconsVue)) {
   app.component(key, component);
 }
+const pinia = createPinia();
+
+
 app.use(createPinia());
 app.use(ElementPlus);
 app.use(router);
+app.use(pinia);
 app.mount("#app");

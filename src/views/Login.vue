@@ -18,6 +18,8 @@
 
 <script>
 import axios from '../axios'; // 引入自定义的 Axios 实例
+import { useUserStore } from "@/stores/user";
+
 
 export default {
   data() {
@@ -35,6 +37,15 @@ export default {
         });
         // 保存 token
         localStorage.setItem('token', response.data.token);
+        
+        const userStore = useUserStore();
+
+        const user = response.data.user;
+
+        userStore.setUserInfo(user);
+
+        console.log(user);
+        
         this.$router.push('/'); // 登录成功后跳转到主界面
       } catch (error) {
         alert('登录失败！');
@@ -42,6 +53,9 @@ export default {
     },
   },
 };
+
+
+
 </script>
 
 <style scoped>
