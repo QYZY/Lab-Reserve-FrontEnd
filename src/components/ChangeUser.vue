@@ -2,17 +2,17 @@
     <div>
       <h2>当前角色: {{ currentRole }}</h2>
       <select v-model="selectedRole" @change="changeRole">
-        <option value="teacher">教师</option>
-        <option value="lab-admin">实验室管理员</option>
-        <option value="super-admin">超级管理员</option>
+        <option value="TEACHER">教师</option>
+        <option value="LAB_ADMIN">实验室管理员</option>
+        <option value="SUPER_ADMIN">超级管理员</option>
       </select>
-      <div v-if="currentRole === 'teacher'">
+      <div v-if="currentRole === 'TEACHER'">
         <p>你可以管理课程</p>
       </div>
-      <div v-if="currentRole === 'lab-admin'">
+      <div v-if="currentRole === 'LAB_ADMIN'">
         <p>你可以管理实验室</p>
       </div>
-      <div v-if="currentRole === 'super-admin'">
+      <div v-if="currentRole === 'SUPER_ADMIN'">
         <p>你可以管理所有用户和实验室</p>
       </div>
     </div>

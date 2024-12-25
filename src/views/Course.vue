@@ -85,6 +85,12 @@ const addCourse = async () => {
     if (!newCourse.value.name || !newCourse.value.className || newCourse.value.studyHour === 0 || newCourse.value.teacherId === 0) {
       alert('请填写完整课程信息')
       return
+    } 
+    try {
+      newCourse.value.teacherId = parseInt(newCourse.value.teacherId);
+    } catch {
+      alert('授课教师ID必须为数字')
+      return
     }
 
     const courseData = {
@@ -103,6 +109,7 @@ const addCourse = async () => {
     addCourseDialogVisible.value = false
     newCourse.value = { name: '', className: '', studyHour: 0, teacherId: 0 }
   } catch (error) {
+    
     console.error('添加课程失败:', error)
     alert('添加课程失败，请稍后再试')
   }
