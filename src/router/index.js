@@ -21,7 +21,7 @@ const routes = [
         component: Course,
         meta: {
           requiresAuth: true,
-          roles: ["TEACHER"],
+          roles: ["TEACHER", "SUPER_ADMIN"],
           title: "课程管理",
           icon: "Notebook",
           hidden: false,
@@ -79,19 +79,9 @@ const routes = [
           hidden: false,
         },
       },
-      {
-        path: "/change",
-        name: "ChangeUser",
-        component: ChangeUser,
-        meta: { title: "用户切换", icon: "SwitchButton", hidden: true },
-      },
-      {
-        path: "/test",
-        name: "Test",
-        component: Test,
-        meta: { title: "测试", icon: "Tools", hidden: true },
-      },
+
     ],
+    requiresAuth: true,
   },
 
   // 登录页面
@@ -111,7 +101,9 @@ const router = createRouter({
 // 导航守卫
 router.beforeEach((to, from, next) => {
   const isLoggedIn = !!localStorage.getItem("token"); // 检查是否登录
-  if (to.meta.requiresAuth && !isLoggedIn) {
+  if (to.path === '/login') return next();
+  if ( !isLoggedIn) {
+    console.log(to.meta.requiresAuth);
     next({ name: "Login" }); // 如果需要认证且未登录，重定向到登录页面
   } else {
     next(); // 继续导航

@@ -4,8 +4,8 @@
       <el-button type="primary" @click="showAddUserDialog">添加用户</el-button>
   
       <el-table :data="users" style="width: 100%" border>
-        <el-table-column prop="name" label="姓名" />
-        <el-table-column prop="email" label="邮箱" />
+        <el-table-column prop="id" label="用户ID" />
+        <el-table-column prop="username" label="用户名" />
         <el-table-column prop="role" label="角色" />
         <el-table-column label="操作">
           <template #default="scope">
@@ -18,11 +18,8 @@
       <!-- 添加用户对话框 -->
       <el-dialog title="添加用户" v-model="addUserDialogVisible">
         <el-form :model="newUser">
-          <el-form-item label="姓名" :rules="[{ required: true, message: '请输入姓名', trigger: 'blur' }]">
-            <el-input v-model="newUser.name"></el-input>
-          </el-form-item>
-          <el-form-item label="邮箱" :rules="[{ required: true, message: '请输入邮箱', trigger: 'blur' }]">
-            <el-input v-model="newUser.email"></el-input>
+          <el-form-item label="用户名" :rules="[{ required: true, message: '请输入用户名', trigger: 'blur' }]">
+            <el-input v-model="newUser.username"></el-input>
           </el-form-item>
           <el-form-item label="角色" :rules="[{ required: true, message: '请选择角色', trigger: 'change' }]">
             <el-select v-model="newUser.role" placeholder="请选择角色">
@@ -40,11 +37,8 @@
       <!-- 编辑用户对话框 -->
       <el-dialog title="编辑用户" v-model="editUserDialogVisible">
         <el-form :model="currentUser">
-          <el-form-item label="姓名" :rules="[{ required: true, message: '请输入姓名', trigger: 'blur' }]">
-            <el-input v-model="currentUser.name"></el-input>
-          </el-form-item>
-          <el-form-item label="邮箱" :rules="[{ required: true, message: '请输入邮箱', trigger: 'blur' }]">
-            <el-input v-model="currentUser.email"></el-input>
+          <el-form-item label="用户名" :rules="[{ required: true, message: '请输入用户名', trigger: 'blur' }]">
+            <el-input v-model="currentUser.username"></el-input>
           </el-form-item>
           <el-form-item label="角色" :rules="[{ required: true, message: '请选择角色', trigger: 'change' }]">
             <el-select v-model="currentUser.role" placeholder="请选择角色">
@@ -63,58 +57,70 @@
   
   <script setup>
   import { ref, onMounted } from 'vue';
+  import axios from 'axios';
   
-  // 模拟从服务器获取用户数据
+  const users = ref([]); // 存储用户列表
+  const currentUser = ref(null); // 当前用户
+  const newUser = ref({ username: '', role: '' }); // 新用户数据
+  const addUserDialogVisible = ref(false); // 控制添加用户对话框的显示
+  const editUserDialogVisible = ref(false); // 控制编辑用户对话框的显示
+  
+  // 获取用户列表
   const fetchUsers = async () => {
-    // 这里可以替换为实际的 API 调用
-    return [
-      { id: 1, name: '张三', email: 'zhangsan@example.com', role: 'admin' },
-      { id: 2, name: '李四', email: 'lisi@example.com', role: 'user' },
-      { id: 3, name: '王五', email: 'wangwu@example.com', role: 'user' },
-    ];
+    try {
+      const response = await axios.get('http://localhost:8080/api/user/list'); // 获取用户列表
+      users.value = response.data; // 更新用户数据
+    } catch (error) {
+      console.error('获取用户列表失败:', error);
+    }
   };
   
-  const users = ref([]);
-  const addUserDialogVisible = ref(false);
-  const editUserDialogVisible = ref(false);
-  const newUser = ref({ name: '', email: '', role: '' });
-  const currentUser = ref(null);
-  
-  // 页面加载时获取用户数据
-  onMounted(async () => {
-    users.value = await fetchUsers();
-  });
-  
   const showAddUserDialog = () => {
-    newUser.value = { name: '', email: '', role: '' }; // 重置新用户数据
+    newUser.value = { username: '', role: '' }; // 重置新用户数据
     addUserDialogVisible.value = true; // 打开添加用户对话框
   };
   
-  const addUser = () => {
-    const newId = users.value.length + 1; // 简单生成 ID
-    users.value.push({ ...newUser.value, id: newId });
-    addUserDialogVisible.value = false; // 关闭对话框
+  const addUser = async () => {
+    try {
+      await axios.post('http://localhost:8080/api/user', newUser.value); // 调用添加用户的 API
+      addUserDialogVisible.value = false; // 关闭对话框
+      await fetchUsers(); // 重新获取用户列表
+    } catch (error) {
+      console.error('添加用户失败:', error);
+      alert('添加用户失败，请稍后再试');
+    }
   };
   
   const editUser = (user) => {
-    currentUser.value = { ...user }; // 复制用户数据
+    currentUser.value = { ...user }; // 复制用户数据到当前用户
     editUserDialogVisible.value = true; // 打开编辑用户对话框
   };
   
-  const updateUser = () => {
-    const index = users.value.findIndex(user => user.id === currentUser.value.id);
-    if (index !== -1) {
-      users.value[index] = { ...currentUser.value }; // 更新用户数据
+  const updateUser = async () => {
+    try {
+      await axios.put(`http://localhost:8080/api/user/${currentUser.value.id}`, currentUser.value); // 调用更新用户的 API
+      editUserDialogVisible.value = false; // 关闭对话框
+      await fetchUsers(); // 重新获取用户列表
+    } catch (error) {
+      console.error('更新用户失败:', error);
+      alert('更新用户失败，请稍后再试');
     }
-    editUserDialogVisible.value = false; // 关闭对话框
   };
   
-  const deleteUser = (id) => {
-    const index = users.value.findIndex(user => user.id === id);
-    if (index !== -1) {
-      users.value.splice(index, 1); // 删除用户
+  const deleteUser = async (userId) => {
+    try {
+      await axios.delete(`http://localhost:8080/api/user/${userId}`); // 调用删除用户的 API
+      await fetchUsers(); // 重新获取用户列表
+    } catch (error) {
+      console.error('删除用户失败:', error);
+      alert('删除用户失败，请稍后再试');
     }
   };
+  
+  // 组件挂载时获取用户列表
+  onMounted(() => {
+    fetchUsers(); // 获取用户列表
+  });
   </script>
   
   <style scoped>

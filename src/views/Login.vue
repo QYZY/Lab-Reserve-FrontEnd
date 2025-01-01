@@ -1,8 +1,11 @@
-<!-- src/views/Login.vue -->
 <template>
   <div class="login-container">
     <h1>登录</h1>
-    <el-form @submit.native.prevent="login">
+    <div v-if="isLoggedIn">
+      <span>欢迎, {{ currentUser.username }}</span>
+      <el-button type="danger" @click="logout">注销</el-button>
+    </div>
+    <el-form v-else @submit.native.prevent="login">
       <el-form-item>
         <el-input v-model="username" placeholder="用户名" required />
       </el-form-item>
@@ -16,46 +19,51 @@
   </div>
 </template>
 
-<script>
-import axios from '../axios'; // 引入自定义的 Axios 实例
-import { useUserStore } from "@/stores/user";
+<script setup>
+import { ref, computed, onMounted } from 'vue';
+import { useUserStore } from '@/stores/user';
+import { useRouter } from 'vue-router';
+import axios from '../axios'; // 自定义 Axios 实例
 
+// 定义响应式数据
+const username = ref('');
+const password = ref('');
+const userStore = useUserStore();
+const router = useRouter();
 
-export default {
-  data() {
-    return {
-      username: '',
-      password: '',
-    };
-  },
-  methods: {
-    async login() {
-      try {
-        const response = await axios.post('/login', {
-          username: this.username,
-          password: this.password,
-        });
-        // 保存 token
-        localStorage.setItem('token', response.data.token);
-        
-        const userStore = useUserStore();
+// 计算属性
+const currentUser = computed(() => userStore.user);
+const isLoggedIn = computed(() => userStore.isLoggedIn);
 
-        const user = response.data.user;
+// 登录方法
+const login = async () => {
+  try {
+    const response = await axios.post('/login', {
+      username: username.value,
+      password: password.value,
+    });
 
-        userStore.setUserInfo(user);
+    const { user: userInfo, token } = response.data;
 
-        console.log(user);
-        
-        this.$router.push('/'); // 登录成功后跳转到主界面
-      } catch (error) {
-        alert('登录失败！');
-      }
-    },
-  },
+    userStore.setUserInfo(userInfo, token);
+    alert('登录成功！');
+    router.push("/"); // 登录成功后跳转到主页
+  } catch (error) {
+    alert('登录失败，请检查用户名和密码。');
+  }
 };
 
+// 注销方法
+const logout = () => {
+  userStore.clearUserInfo();
+  alert('您已注销！');
+  router.push('/login'); // 注销后跳转到登录页面
+};
 
-
+// 页面加载时初始化用户
+onMounted(() => {
+  userStore.initializeUser();
+});
 </script>
 
 <style scoped>

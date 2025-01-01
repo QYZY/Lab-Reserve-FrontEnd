@@ -23,26 +23,29 @@
         {{ item.name }}
       </el-breadcrumb-item>
     </el-breadcrumb>
-
-    <el-button @click="goToLogin" type="primary">
-      登录
-    </el-button>
     
+    <div class="login-status">
+      <template v-if="isLoggedIn">
+        <span>欢迎, {{ currentUser.username }}</span>
+        <el-button @click="logout" type="danger">注销</el-button>
+      </template>
+      <el-button v-else @click="goToLogin" type="primary">登录</el-button>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, watch, computed } from "vue";
-import { useRoute, useRouter } from "vue-router";
-import { useBreadcrumbsStore } from "@/stores/breadcrumbs";
+import { computed } from "vue";
+import { useUserStore } from "@/stores/user";
+import { useRouter } from "vue-router";
 import { useSidebarStore } from "@/stores/sidebar";
 
-const route = useRoute();
-const router = useRouter();
-const breadcrumbsStore = useBreadcrumbsStore();
 const sidebarStore = useSidebarStore();
+const userStore = useUserStore();
+const router = useRouter();
 
-const breadcrumbs = computed(() => breadcrumbsStore.breadcrumbs);
+const currentUser = computed(() => userStore.user);
+const isLoggedIn = computed(() => userStore.isLoggedIn);
 
 const toggleSidebar = () => {
   sidebarStore.toggle();
@@ -50,6 +53,12 @@ const toggleSidebar = () => {
 
 const goToLogin = () => {
   router.push({ name: "Login" });
+};
+
+const logout = () => {
+  userStore.clearUserInfo();
+  alert('您已注销！');
+  router.push('/login'); // 注销后跳转到登录页面
 };
 </script>
 
@@ -85,7 +94,7 @@ const goToLogin = () => {
   color: #333;
 }
 
-.login-button {
-  margin-left: 20px;
+.login-status span{
+  margin-right: 10px;
 }
 </style>

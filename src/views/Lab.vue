@@ -58,6 +58,21 @@
   
   const userStore = useUserStore();
   const managedLabs = ref([]); // 存储当前用户管理的实验室
+  const addLabDialogVisible = ref(false); // 控制添加实验室对话框的显示
+  const editLabDialogVisible = ref(false); // 控制编辑实验室对话框的显示
+  const newLab = ref({ name: '', description: '', adminId: userStore.user.id }); // 新实验室数据，包含 adminId
+  const currentLab = ref({ id: null, name: '', description: '', adminId: userStore.user.id }); // 当前编辑的实验室数据
+  
+  // 显示添加实验室对话框
+  const showAddLabDialog = () => {
+    addLabDialogVisible.value = true; // 设置对话框为可见
+  };
+  
+  // 显示编辑实验室对话框
+  const editLab = (lab) => {
+    currentLab.value = { ...lab }; // 复制实验室数据到当前编辑对象
+    editLabDialogVisible.value = true; // 设置对话框为可见
+  };
   
   // 获取当前用户管理的实验室
   const fetchManagedLabs = async () => {
@@ -67,6 +82,43 @@
       managedLabs.value = response.data; // 更新管理的实验室数据
     } catch (error) {
       console.error('获取管理的实验室失败:', error);
+    }
+  };
+  
+  // 添加实验室
+  const addLab = async () => {
+    try {
+      await axios.post('http://127.0.0.1:8080/api/lab/add', newLab.value); // 调用添加实验室的 API
+      addLabDialogVisible.value = false; // 关闭对话框
+      newLab.value = { name: '', description: '', adminId: userStore.user.id }; // 重置输入
+      await fetchManagedLabs(); // 重新获取实验室信息
+    } catch (error) {
+      console.error('添加实验室失败:', error);
+      alert('添加实验室失败，请稍后再试');
+    }
+  };
+  
+  // 更新实验室
+  const updateLab = async () => {
+    try {
+      await axios.put(`http://127.0.0.1:8080/api/lab/${currentLab.value.id}`, currentLab.value); // 调用更新实验室的 API
+      editLabDialogVisible.value = false; // 关闭对话框
+      await fetchManagedLabs(); // 重新获取实验室信息
+    } catch (error) {
+      console.error('更新实验室失败:', error);
+      alert('更新实验室失败，请稍后再试');
+    }
+  };
+  
+  // 删除实验室
+  const deleteLab = async (labId) => {
+    try {
+      await axios.delete(`http://127.0.0.1:8080/api/lab/${labId}`); // 调用删除实验室的 API
+      alert('实验室已删除');
+      await fetchManagedLabs(); // 重新获取实验室信息
+    } catch (error) {
+      console.error('删除实验室失败:', error);
+      alert('删除实验室失败，请稍后再试');
     }
   };
   
