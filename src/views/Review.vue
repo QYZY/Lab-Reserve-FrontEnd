@@ -50,7 +50,7 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
-import axios from "axios";
+import axios from "@/axios";
 import { useUserStore } from "@/stores/user";
 import { DAYS, TIME_SLOTS, STATUS } from "@/utils/constants";
 

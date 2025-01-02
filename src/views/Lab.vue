@@ -53,7 +53,7 @@
   
   <script setup>
   import { ref, onMounted } from 'vue';
-  import axios from 'axios';
+  import axios from '@/axios';
   import { useUserStore } from '@/stores/user';
   
   const userStore = useUserStore();

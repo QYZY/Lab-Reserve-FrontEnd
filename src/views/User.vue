@@ -57,7 +57,7 @@
   
   <script setup>
   import { ref, onMounted } from 'vue';
-  import axios from 'axios';
+  import axios from '@/axios';
   
   const users = ref([]); // 存储用户列表
   const currentUser = ref(null); // 当前用户
