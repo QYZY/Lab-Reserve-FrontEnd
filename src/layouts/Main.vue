@@ -40,6 +40,7 @@ const sidebarStore = useSidebarStore(); // 创建侧边栏状态管理实例
 
 .common-aside {
   width: 15%; /* 默认宽度 */
+  overflow-x: hidden; /* 隐藏横向滚动条 */
   transition: width 0.3s; /* 添加过渡效果 */
 }
 

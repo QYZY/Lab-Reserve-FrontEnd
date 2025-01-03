@@ -55,15 +55,18 @@ const handleMenuClick = (item) => {
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
   height: 100%;
   transition: width 0.3s; /* 添加过渡效果 */
+  padding-top: 20px; /* 顶部间距 */
 }
 
 .sidebar.collapsed {
-  width: 64px; /* 收缩后的宽度 */
+  width: 80px; /* 收缩后的宽度 */
 }
 
 .header {
-  padding: 20px;
-  text-align: center;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
 }
 
 .title {
@@ -73,10 +76,11 @@ const handleMenuClick = (item) => {
 }
 
 .menu-item {
-    height: 40px;
-    transition: background-color 0.5s;
-    display: flex;
-    align-items: center; /* 垂直居中对齐 */
+  height: 40px;
+  display: flex;
+  align-items: center; /* 垂直居中对齐 */
+  transition: background-color 0.5s;
+  padding: 0px;
 }
 
 .menu-item:hover {
@@ -85,13 +89,30 @@ const handleMenuClick = (item) => {
 
 .menu-icon {
   width: 20px;
-  height:20px;
+  height: 20px;
   margin-right: 10px; /* 图标与文本之间的间距 */
-  margin-left: 20px;
   color: #409eff;
 }
 
 .menu-item span {
-  transition: opacity 0.3s; /* 添加过渡效果 */
+  transition: opacity 0.3s;
+}
+
+.menu-item span {
+  /* 控制文本的隐藏 */
+  opacity: 1;
+}
+
+.sidebar.collapsed .menu-item span {
+  opacity: 0; /* 隐藏文本 */
+}
+
+.toggle-btn {
+  padding: 0;
+  font-size: 16px;
+  background-color: transparent;
+  border: none;
+  color: #409eff;
 }
 </style>
+

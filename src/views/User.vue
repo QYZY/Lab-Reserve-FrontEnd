@@ -73,20 +73,18 @@
 
     <!-- 重置密码对话框 -->
     <el-dialog title="重置密码" v-model="resetPasswordDialogVisible">
-      <el-form :model="resetPasswordForm" ref="resetPasswordForm">
-        <el-form-item label="新密码" prop="newPassword">
+      <el-form :model="resetPasswordForm" ref="resetPasswordFormRef">
+        <el-form-item label="新密码" prop="newPassword" :rules="{ required: true, message: '请输入新密码', trigger: 'blur' }">
           <el-input
-            v-model="resetPasswordForm.newPassword"
-            type="text"
+            v-model="newPassword"
+            type="password"
             placeholder="请输入新密码"
           ></el-input>
         </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="resetPasswordDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitResetPasswordForm"
-          >确定</el-button
-        >
+        <el-button type="primary" @click="submitResetPasswordForm">确定</el-button>
       </template>
     </el-dialog>
   </div>
@@ -108,11 +106,12 @@ const resetPasswordForm = ref({
   newPassword: "",
   userId: "",
 }); // 重置密码表单数据
+const newPassword = ref("");
 
 // 获取用户列表
 const fetchUsers = async () => {
   try {
-    const response = await axios.get("http://localhost:8080/api/user/list"); // 获取用户列表
+    const response = await axios.get("/user/list"); // 获取用户列表
     users.value = response.data; // 更新用户数据
   } catch (error) {
     console.error("获取用户列表失败:", error);
@@ -186,8 +185,8 @@ const confirmDeleteUser = async () => {
 };
 
 const resetPassword = async (userId) => {
+  newPassword.value = "";
   resetPasswordForm.value.userId = userId;
-  resetPasswordForm.value.newPassword = ""; // 重置新密码
   resetPasswordDialogVisible.value = true; // 打开重置密码对话框
   console.log(resetPasswordForm.value);
 };
@@ -195,9 +194,13 @@ const resetPassword = async (userId) => {
 const submitResetPasswordForm = async () => {
   try {
     console.log(resetPasswordForm.value);
-    await axios.post(`/user/reset`, {
-      userId: resetPasswordForm.value.id,
-      newPassword: resetPasswordForm.value.newPassword,
+    const formData = new FormData();
+    formData.append("userId", resetPasswordForm.value.userId);
+    formData.append("newPassword", newPassword.value);
+    await axios.post(`/user/reset`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
     }); // 调用重置密码的 API
     resetPasswordDialogVisible.value = false; // 关闭对话框
     alert("重置密码成功");

@@ -88,7 +88,7 @@
   // 添加实验室
   const addLab = async () => {
     try {
-      await axios.post('http://127.0.0.1:8080/api/lab/add', newLab.value); // 调用添加实验室的 API
+      await axios.post('/lab/add', newLab.value); // 调用添加实验室的 API
       addLabDialogVisible.value = false; // 关闭对话框
       newLab.value = { name: '', description: '', adminId: userStore.user.id }; // 重置输入
       await fetchManagedLabs(); // 重新获取实验室信息
