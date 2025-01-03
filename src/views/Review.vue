@@ -63,16 +63,16 @@ const userStore = useUserStore();
 // 获取所有实验室、用户和课程
 const fetchAllData = async () => {
   try {
-    const labsResponse = await axios.get("http://localhost:8080/api/lab/list");
+    const labsResponse = await axios.get("/lab/list");
     labs.value = labsResponse.data; // 更新实验室数据
 
     const usersResponse = await axios.get(
-      "http://localhost:8080/api/user/list"
+      "/user/list"
     );
     users.value = usersResponse.data; // 更新用户数据
 
     const coursesResponse = await axios.get(
-      "http://localhost:8080/api/course/list"
+      "/course/list"
     );
     courses.value = coursesResponse.data; // 更新课程数据
   } catch (error) {
@@ -84,7 +84,7 @@ const fetchAllData = async () => {
 const fetchPendingReviews = async () => {
   try {
     const response = await axios.get(
-      `http://localhost:8080/api/reservation/admin/${userStore.user.id}`
+      `/reservation/admin/${userStore.user.id}`
     );
     pendingReviews.value = response.data; // 更新待审核的预约数据
   } catch (error) {
@@ -132,7 +132,7 @@ const getStatusById = (statusId) => {
 const approveReview = async (review) => {
   try {
     await axios.patch(
-      `http://localhost:8080/api/reservation/${review.id}/approve`
+      `/reservation/${review.id}/approve`
     ); // 调用通过审核的 API
     console.log("通过审核:", review.projectName);
     await fetchPendingReviews(); // 重新获取待审核的预约
@@ -145,7 +145,7 @@ const approveReview = async (review) => {
 const rejectReview = async (review) => {
   try {
     await axios.patch(
-      `http://localhost:8080/api/reservation/${review.id}/reject`
+      `/reservation/${review.id}/reject`
     ); // 调用拒绝审核的 API
     console.log("拒绝审核:", review.projectName);
     await fetchPendingReviews(); // 重新获取待审核的预约

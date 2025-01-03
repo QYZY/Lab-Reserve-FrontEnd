@@ -58,5 +58,7 @@ const sidebarStore = useSidebarStore(); // 创建侧边栏状态管理实例
 
 .common-main {
   height: calc(100vh - 100px); /* 计算主内容区域的高度 */
+  margin-left: 10px;
+  padding: 0px;
 }
 </style>

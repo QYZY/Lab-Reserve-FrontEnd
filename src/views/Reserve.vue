@@ -3,322 +3,383 @@
     <h2>实验室预约管理</h2>
 
     <el-form :model="filters" label-width="100px">
-      <el-form-item label="选择课程">
-        <el-tabs v-model="filters.selectedCourse" type="card">
+      <!-- 选择实验室 -->
+      <el-form-item label="选择实验室">
+        <el-tabs v-model="filters.selectedLab" type="card">
           <el-tab-pane
-            v-for="course in courses"
-            :key="course.id"
-            :label="course.name"
-            :name="course.id"
+            v-for="lab in labs"
+            :key="lab.id"
+            :label="lab.name"
+            :name="lab.id"
           />
         </el-tabs>
       </el-form-item>
 
+      <!-- 选择周数 -->
       <el-form-item label="选择周数">
-        <el-checkbox-group v-model="filters.selectedWeeks">
-          <el-checkbox v-for="week in weeks" :key="week" :label="week">
-            第 {{ week }} 周
-          </el-checkbox>
-        </el-checkbox-group>
-      </el-form-item>
-
-      <el-form-item label="选择星期">
-        <el-tabs v-model="filters.selectedDay" type="card">
+        <el-tabs v-model="filters.selectedWeek" type="card">
           <el-tab-pane
-            v-for="(day, index) in days"
-            :key="day"
-            :label="day"
-            :name="index + 1"
+            v-for="week in weeks"
+            :key="week"
+            :label="'第 ' + week + ' 周'"
+            :name="week"
           />
         </el-tabs>
       </el-form-item>
-
-      <el-form-item label="选择时段">
-        <el-tabs v-model="filters.selectedTimeSlot" type="card">
-          <el-tab-pane
-            v-for="(timeSlot, index) in TIME_SLOTS"
-            :key="timeSlot.id"
-            :label="timeSlot.label"
-            :name="timeSlot.id"
-          />
-        </el-tabs>
-      </el-form-item>
-
-      <el-button type="primary" @click="fetchAvailableLabs"
-        >查询可用实验室</el-button
-      >
-      <el-button type="primary" @click="fetchUserReservations"
-        >我的预约</el-button
-      >
+      <el-button type="primary" @click="fetchReservations">查询预约</el-button>
     </el-form>
 
-    <div class="available-labs" v-if="showAvailableLabs">
-      <h3>可用实验室</h3>
-      <el-card v-for="lab in availableLabs" :key="lab.id" class="lab-card">
-        <div class="lab-content">
-          <h4>{{ lab.name }}</h4>
-          <p>管理员: {{ lab.adminName }}</p>
-          <p>描述: {{ lab.description }}</p>
-        </div>
-        <div class="lab-actions">
-          <el-button type="text" @click="showLabDetails(lab)"
-            >查看详情</el-button
-          >
-          <el-button type="primary" @click="bookLab(lab)">预约</el-button>
-        </div>
-      </el-card>
-    </div>
-
-    <div class="user-reservations" v-if="showUserReservation">
-      <h3>我的预约</h3>
-      <el-card
-        v-for="reservation in userReservations"
-        :key="reservation.id"
-        class="lab-card"
+    <!-- 显示课程表 -->
+    <div class="schedule" v-if="showSchedule">
+      <h3>课程表</h3>
+      <el-table
+        :data="scheduleData"
+        border
+        :row-class-name="rowClassName"
+        class="schedule-table"
+        table-layout="fixed"
       >
-        <div class="lab-content">
-          <h4>{{ displayLabNameByid(reservation.labId) }}</h4>
-          <p>课程: {{ displayCourseNameById(reservation.courseId) }}</p>
-          <p>周数: 第 {{ reservation.weekNumber }} 周</p>
-          <p>星期: {{ reservation.weekDay }}</p>
-          <p>时段: {{ getPeriodById(reservation.periodId) }}</p>
-        </div>
-        <div class="lab-actions">
-          <el-button type="danger" @click="cancelReservation(reservation.id)"
-            >取消预约</el-button
-          >
-        </div>
-      </el-card>
+        <el-table-column label="时间/星期" width="200">
+          <template #default="{ row }">
+            <div>{{ row.time }}</div>
+          </template>
+        </el-table-column>
+
+        <el-table-column
+          v-for="(day, index) in daysOfWeek"
+          :key="index"
+          :label="day"
+          width="180"
+        >
+          <template #default="{ row }">
+            <!-- 预约按钮 -->
+            <el-button
+              v-if="!row[day]"
+              @click="openBookingModal(row, day)"
+              type="info"
+              >预约</el-button
+            >
+            <!-- 查看预约详细信息 -->
+            <el-button v-else @click="openDetailsModal(row, day)" type="danger"
+              >已预约</el-button
+            >
+          </template>
+        </el-table-column>
+      </el-table>
     </div>
 
-    <!-- 实验室详细信息对话框 -->
-    <el-dialog title="实验室详细信息" v-model="labDetailsDialogVisible">
-      <div v-if="selectedLab">
-        <p><strong>实验室名称:</strong> {{ selectedLab.name }}</p>
-        <!-- <p><strong>容量:</strong> {{ selectedLab.capacity }} 人</p> -->
-        <!-- <p><strong>设备:</strong> {{ selectedLab.equipment.join(', ') }}</p> -->
-        <!-- <p><strong>备注:</strong> {{ selectedLab.notes }}</p> -->
+    <!-- 预约窗口 -->
+    <el-dialog title="预约课程" v-model="isBookingModalVisible" width="50%">
+      <el-form :model="bookingInfo">
+        <el-form-item label="选择课程">
+          <el-select v-model="bookingInfo.courseId" placeholder="请选择课程">
+            <el-option
+              v-for="course in courses.filter(
+                (course) => course.teacherId === userStore.user.id
+              )"
+              :key="course.id"
+              :label="course.name"
+              :value="course.id"
+            />
+          </el-select>
+        </el-form-item>
+
+        <span slot="footer" class="dialog-footer">
+          <el-button @click="isBookingModalVisible = false">取消</el-button>
+          <el-button type="primary" @click="submitBooking">确认预约</el-button>
+        </span>
+      </el-form>
+    </el-dialog>
+
+    <!-- 查看预约详细信息 -->
+    <el-dialog title="课程详情" v-model="isDetailsModalVisible" width="50%">
+      <div v-if="selectedBooking">
+        <p><strong>课程名称:</strong> {{ selectedBooking.courseName }}</p>
+        <p><strong>授课教师:</strong> {{ selectedBooking.teacherName }}</p>
+
+        <p><strong>备注:</strong> {{ selectedBooking.note }}</p>
       </div>
       <template #footer>
-        <el-button @click="labDetailsDialogVisible = false">关闭</el-button>
+        <el-button @click="isDetailsModalVisible = false">关闭</el-button>
+        <el-button
+          v-if="selectedBooking.userId === userStore.user.id"
+          type="danger"
+          @click="cancelBooking(selectedBooking.id)"
+          >取消预约</el-button
+        >
       </template>
     </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, reactive, onMounted } from "vue";
 import axios from "@/axios";
-import {
-  WEEKS,
-  DAYS,
-  TIME_SLOTS,
-} from "@/utils/constants";
 import { useUserStore } from "@/stores/user";
-
-const courses = ref([]); // 存储用户的课程
-const labs = ref([]); // 存储所有实验室
-
-const weeks = WEEKS;
-const days = DAYS; // 星期映射为1到7
 
 const userStore = useUserStore();
 
-const filters = ref({
-  selectedCourse: null,
-  selectedWeeks: [], // 修改为数组以支持多选
-  selectedDay: null,
-  selectedTimeSlot: null,
+// 选择的实验室和周数
+const filters = reactive({
+  selectedLab: null,
+  selectedWeek: null,
 });
 
-const availableLabs = ref([]);
+// 可用实验室列表
+const labs = ref([]);
 
-const labDetailsDialogVisible = ref(false);
-const selectedLab = ref(null);
-const showAvailableLabs = ref(false); // 控制显示可用实验室或我的预约
-const showUserReservation = ref(false); // 控制显示可用实验室或我的预约
+// 可选周数
+const weeks = ref([1, 2, 3, 4, 5, 6, 7]);
 
-const userReservations = ref([]); // 存储用户的预约
+// 课程数据（从服务器获取）
+const courses = ref([]);
 
-// 获取用户的课程
-const fetchCourses = async () => {
-  try {
-    const userId = userStore.user.id; // 假设用户ID为1，您可以根据实际情况设置
-    const response = await axios.get(
-      `http://127.0.0.1:8080/api/course/teacher/${userId}`
-    );
-    courses.value = response.data;
-  } catch (error) {
-    console.error("获取课程失败:", error);
-  }
+// 课程表时间段和星期
+const timeSlots = ref(["一二节", "三四节", "五六节", "七八节"]);
+const daysOfWeek = ref([
+  "周一",
+  "周二",
+  "周三",
+  "周四",
+  "周五",
+  "周六",
+  "周日",
+]);
+
+// 课程表数据
+const scheduleData = ref([]);
+const reservations = ref([]);
+const users = ref([]);
+// 预约和查看详细信息的对话框控制
+const isBookingModalVisible = ref(false);
+const isDetailsModalVisible = ref(false);
+const showSchedule = ref(false);
+
+// 选择的预约信息
+const bookingInfo = reactive({
+  userId: null,
+  courseId: null,
+  labId: null,
+  periodId: null,
+  weekNumber: null,
+  weekDay: null,
+});
+
+const selectedBooking = ref({
+  userId: "",
+  courseName: "",
+  teacherName: "",
+  note: "",
+});
+
+// 初始化课程表数据
+const initializeSchedule = () => {
+  scheduleData.value = timeSlots.value.map((timeSlot) => {
+    let row = { time: timeSlot };
+    daysOfWeek.value.forEach((day) => {
+      row[day] = null; // 初始状态为空（表示未预约）
+    });
+    return row;
+  });
+  console.log(scheduleData.value);
 };
 
-// 获取所有实验室
+const getPeriodId = (timeName) => {
+  const index = timeSlots.value.indexOf(timeName);
+  return index !== -1 ? index + 1 : null; // 返回索引+1，未找到返回 null
+};
+
+const getDayId = (dayName) => {
+  const index = daysOfWeek.value.indexOf(dayName);
+  return index !== -1 ? index + 1 : null; // 返回索引+1，未找到返回 null
+};
+// 查询可用实验室，获取课程表数据（模拟数据）
+
 const fetchLabs = async () => {
   try {
-    const response = await axios.get("http://127.0.0.1:8080/api/lab/list"); // 假设有一个获取所有实验室的 API
-    labs.value = response.data; // 更新实验室数据
+    const response = await axios.get("/lab/list");
+    labs.value = response.data;
   } catch (error) {
-    console.error("获取实验室失败:", error);
+    console.error("获取可用实验室失败", error);
   }
 };
 
-// 查询可用实验室
-const fetchAvailableLabs = async () => {
-  if (
-    filters.value.selectedCourse &&
-    filters.value.selectedWeeks.length > 0 && // 检查是否选择了周数
-    filters.value.selectedDay &&
-    filters.value.selectedTimeSlot
-  ) {
-    try {
-      const weekNumber = filters.value.selectedWeeks[0]; // 假设选择的周数为第一个
-      const weekDay = filters.value.selectedDay; // 直接使用选中的星期
-      const periodId = filters.value.selectedTimeSlot; // 直接使用选中的时段
-
-      // 调用获取可用实验室的 API
-      const response = await axios.get(
-        "http://127.0.0.1:8080/api/lab/available",
-        {
-          params: { weekNumber, weekDay, periodId },
-        }
-      );
-
-      console.log(response.data);
-
-      availableLabs.value = response.data; // 更新可用实验室数据
-      console.log(availableLabs);
-      showAvailableLabs.value = !showAvailableLabs.value; // 切换视图
-      showUserReservation.value = false;
-    } catch (error) {
-      console.error("获取可用实验室失败:", error);
-      alert("获取可用实验室失败，请稍后再试");
-    }
-  } else {
-    availableLabs.value = [];
-    alert("请完整选择课程、周数、星期和时段");
+// 获取课程数据
+const fetchCourses = async () => {
+  try {
+    const response = await axios.get(`/course/list`);
+    courses.value = response.data;
+  } catch (error) {
+    console.error("获取课程数据失败", error);
   }
 };
 
-const displayCourseNameById = (courseId) => {
+// 根据 courseId 获取课程名称
+const getCourseNameById = (courseId) => {
   const course = courses.value.find((course) => course.id === courseId);
-  return course ? course.name : "未知课程";
+  return course ? course.name : null; // 如果找到，返回课程名称，否则返回 null
 };
 
-const displayLabNameByid = (labId) => {
-  const lab = labs.value.find((lab) => lab.id === labId);
-  return lab ? lab.name : "未知实验室";
+// 获取用户列表并缓存
+const fetchUsers = async () => {
+  try {
+    const response = await axios.get("/user/list");
+    if (Array.isArray(response.data)) {
+      users.value = response.data; // 将数据存储到 users 中
+    } else {
+      console.error("返回的数据格式错误");
+    }
+  } catch (error) {
+    console.error("获取用户信息失败:", error);
+  }
 };
 
-const getPeriodById = (periodId) => {
-  const slot = TIME_SLOTS.find((slot) => slot.id === periodId);
-  return slot ? slot.label : "未知时段"; // 返回对应的label或默认值
+// 根据 userId 获取用户名
+const getUsernameById = (userId) => {
+  const user = users.value.find((user) => user.id === userId);
+  return user ? user.username : null;
 };
 
-// 显示实验室详细信息
-const showLabDetails = (lab) => {
-  selectedLab.value = lab;
-  labDetailsDialogVisible.value = true; // 显示实验室详情对话框
-};
+// 获取预约信息
+const fetchReservations = async () => {
+  console.log(filters);
 
-// 预约实验室
-const bookLab = async (lab) => {
-  const reservationData = {
-    userId: userStore.user.id, // 假设用户ID为1
-    courseId: filters.value.selectedCourse,
-    labId: lab.id,
-    periodId: filters.value.selectedTimeSlot,
-    weekNumber: filters.value.selectedWeeks[0], // 假设选择的周数为第一个
-    weekDay: filters.value.selectedDay,
-  };
+  const labId = filters.selectedLab;
+  const weekNumber = filters.selectedWeek;
+
+  if (!labId || !weekNumber) {
+    alert("请选择实验室和周数");
+    return;
+  }
 
   try {
-    const response = await axios.post(
-      "http://127.0.0.1:8080/api/reservation/add",
-      reservationData
-    );
-    console.log("预约成功:", response.data);
-    alert("预约成功");
-    fetchAvailableLabs();
+    const response = await axios.get(`/reservation/week`, {
+      params: {
+        labId,
+        weekNumber,
+      },
+    });
+
+    // 处理返回的数据并更新 reservations
+    reservations.value = response.data;
+    console.log(reservations.value);
+
+    // 转换预约数据为课程表数据
+    const schedule = timeSlots.value.map((timeSlot) => {
+      let row = { time: timeSlot };
+      daysOfWeek.value.forEach((day) => {
+        row[day] = null; // 初始状态为空
+      });
+      return row;
+    });
+
+    reservations.value.forEach((reservation) => {
+      const { weekDay, periodId, courseId, userId ,id} = reservation;
+      const day = daysOfWeek.value[weekDay - 1]; // 获取对应的星期
+      const time = timeSlots.value[periodId - 1]; // 获取对应的时间段
+
+      // 获取课程名称
+      const courseName = getCourseNameById(courseId);
+      const teacherName = getUsernameById(userId);
+
+      console.log(day, time, courseName);
+      schedule.forEach((row) => {
+        if (row.time === time) {
+          row[day] = {
+            id: id,
+            courseName: courseName,
+            teacherName: teacherName,
+            userId: userId,
+          };
+        }
+      });
+    });
+
+    scheduleData.value = schedule; // 更新课程表数据
+    showSchedule.value = true;
+    console.log(scheduleData.value);
+  } catch (error) {
+    console.error("Error fetching reservations:", error);
+  }
+};
+
+// 提交预约
+const submitBooking = async () => {
+  try {
+    const response = await axios.post("/reservation/add", bookingInfo);
+    alert(response.data);
+    isBookingModalVisible.value = false; // 关闭预约窗口
+    fetchReservations();
   } catch (error) {
     console.error("预约失败:", error);
-    alert("预约失败，请稍后再预约");
   }
 };
 
-// 获取用户的预约
-const fetchUserReservations = async () => {
+const cancelBooking = async(reservationId) => {
   try {
-    const userId = userStore.user.id; // 获取用户ID
-    const response = await axios.get(
-      `http://127.0.0.1:8080/api/reservation/user/${userId}`
-    );
-    const filteredReservations = response.data.filter(reservation => reservation.status === 'PENDING'); // 过滤状态为PENDING的预约
-    userReservations.value = filteredReservations; // 更新预约数据
-    console.log(userReservations.value);
-
-    showUserReservation.value = !showUserReservation.value; // 切换到我的预约视图
-    showAvailableLabs.value = false;
-  } catch (error) {
-    console.error("获取用户预约失败:", error);
-  }
-};
-
-// 取消预约
-const cancelReservation = async (reservationId) => {
-  try {
-    await axios.patch(
-      `http://127.0.0.1:8080/api/reservation/${reservationId}/cancel`
-    ); // 调用取消预约的 API
+    await axios.patch(`/reservation/${reservationId}/cancel`);
     alert("预约已取消");
-    fetchUserReservations(); // 重新获取用户预约列表
+    isDetailsModalVisible.value = false
+    fetchReservations(); // 更新预约列表
   } catch (error) {
     console.error("取消预约失败:", error);
     alert("取消预约失败，请稍后再试");
   }
+}
+// 打开预约窗口
+const openBookingModal = (row, day) => {
+  const labId = filters.selectedLab;
+  const weekNumber = filters.selectedWeek;
+
+  if (!labId || !weekNumber) {
+    alert("请选择实验室和周数");
+    return;
+  }
+
+  bookingInfo.periodId = getPeriodId(row.time);
+  bookingInfo.weekDay = getDayId(day);
+  bookingInfo.courseId = null;
+  bookingInfo.userId = userStore.user.id;
+  bookingInfo.labId = labId;
+
+  bookingInfo.weekNumber = weekNumber;
+  isBookingModalVisible.value = true;
+  console.log(bookingInfo);
 };
 
-// 组件挂载时获取用户的课程和实验室
+
+// 打开查看详细信息窗口
+const openDetailsModal = (row, day) => {
+  const booking = row[day];
+  selectedBooking.value.id = booking.id;
+  selectedBooking.value.courseName = booking.courseName;
+  selectedBooking.value.note = booking.note || "无备注";
+  selectedBooking.value.userId = booking.userId;
+  selectedBooking.value.teacherName = booking.teacherName || "未知教师";
+  isDetailsModalVisible.value = true;
+  console.log(selectedBooking.value);
+};
+
+// 生命周期钩子：组件挂载时初始化课程表
 onMounted(() => {
+  fetchUsers();
+  fetchLabs();
   fetchCourses();
-  fetchLabs(); // 获取所有实验室
+  initializeSchedule();
 });
 </script>
 
 <style scoped>
 .lab-booking {
+  height: 100%;
   padding: 20px;
 }
 
-.available-labs {
+.schedule {
   margin-top: 20px;
 }
 
-.user-reservations{
-  margin-top: 20px;
-}
-
-.lab-card {
-  margin-bottom: 15px;
-  padding: 15px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border: 1px solid #e4e4e4;
-  border-radius: 8px;
-}
-
-.lab-content {
-  flex-grow: 1;
-  margin-right: 20px;
-}
-
-.lab-actions {
-  display: flex;
-  gap: 10px;
-}
-
-.lab-list {
-  margin-top: 20px;
+.el-button {
+  margin: 5px;
 }
 </style>

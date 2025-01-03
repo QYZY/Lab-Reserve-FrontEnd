@@ -5,6 +5,7 @@ import Lab from "@/views/Lab.vue";
 import User from "@/views/User.vue";
 import Reserve from "@/views/Reserve.vue";
 import Review from "@/views/Review.vue";
+import Schedule from "@/views/Schedule.vue";
 import ChangeUser from "@/components/ChangeUser.vue";
 import Test from "@/components/Test.vue";
 import Layout from "@/layouts/Main.vue";
@@ -76,6 +77,19 @@ const routes = [
           roles: ["LAB_ADMIN", "SUPER_ADMIN"],
           title: "审核管理",
           icon: "Check",
+          hidden: false,
+        },
+      },
+
+      {
+        path: "/schedule",
+        name: "Schedule",
+        component: Schedule,
+        meta: {
+          requiresAuth: true,
+          roles: ["TEACHER"],
+          title: "个人课表",
+          icon: "User",
           hidden: false,
         },
       },
